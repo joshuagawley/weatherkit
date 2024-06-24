@@ -43,7 +43,7 @@ struct Header {
     id: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize, Debug)]
 struct Claims {
     /// Issuer claim key.
     iss: String,
@@ -62,12 +62,12 @@ struct Token {
 }
 
 impl Header {
-    fn new(kid: &str, id: &str) -> Self {
+    fn new<S: AsRef<str>>(kid: S, id: S) -> Self {
         Self {
             typ: "JWT".to_owned(),
             alg: Algorithm::ES256,
-            kid: kid.to_owned(),
-            id: id.to_owned(),
+            kid: kid.as_ref().to_owned(),
+            id: id.as_ref().to_owned(),
         }
     }
 }
