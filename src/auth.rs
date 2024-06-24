@@ -18,17 +18,17 @@ pub struct TokenAssets {
 }
 
 impl TokenAssets {
-    pub fn new<S: Into<String>, V: Into<Vec<u8>>>(
+    pub fn new<S: AsRef<str>, V: AsRef<[u8]>>(
         key_id: S,
         service_id: S,
         team_id: S,
         private_key: V,
     ) -> Self {
         Self {
-            key_id: key_id.into(),
-            service_id: service_id.into(),
-            team_id: team_id.into(),
-            private_key: private_key.into(),
+            key_id: key_id.as_ref().to_owned(),
+            service_id: service_id.as_ref().to_owned(),
+            team_id: team_id.as_ref().to_owned(),
+            private_key: private_key.as_ref().to_owned(),
         }
     }
 }
