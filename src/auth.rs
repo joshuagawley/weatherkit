@@ -75,21 +75,20 @@ impl Header {
 impl Claims {
     fn from_token_assets(token_assets: &TokenAssets) -> Result<Self> {
         Ok(Self {
-                iss: token_assets.team_id.clone(),
-                iat: SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)?
-                    .as_secs(),
-                exp: (SystemTime::now() + Duration::from_secs(ONE_HOUR))
-                    .duration_since(SystemTime::UNIX_EPOCH)?
-                    .as_secs(),
-                sub: token_assets.service_id.clone(),
-            }
-        )
+            iss: token_assets.team_id.clone(),
+            iat: SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)?
+                .as_secs(),
+            exp: (SystemTime::now() + Duration::from_secs(ONE_HOUR))
+                .duration_since(SystemTime::UNIX_EPOCH)?
+                .as_secs(),
+            sub: token_assets.service_id.clone(),
+        })
     }
 }
 
 impl Token {
-    fn from_token_assets(token_assets: &TokenAssets) -> Result<Self>{
+    fn from_token_assets(token_assets: &TokenAssets) -> Result<Self> {
         Ok(Self {
             header: Header::new(
                 &token_assets.key_id,
