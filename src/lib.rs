@@ -485,15 +485,3 @@ pub enum DataSet {
     /// The next hour forecast for the requested location.
     WeatherAlerts,
 }
-
-impl DataSet {
-    pub const fn fmt(&self) -> &str {
-        match self {
-            DataSet::CurrentWeather => "currentWeather",
-            DataSet::ForecastDaily => "forecastDaily",
-            DataSet::ForecastHourly => "forecastHourly",
-            DataSet::ForecastNextHour => "forecastNextHour",
-            DataSet::WeatherAlerts => "weatherAlerts",
-        }
-    }
-}
