@@ -17,22 +17,6 @@ pub struct TokenAssets {
     private_key: Vec<u8>,
 }
 
-impl TokenAssets {
-    pub fn new<S: AsRef<str>, V: AsRef<[u8]>>(
-        key_id: S,
-        service_id: S,
-        team_id: S,
-        private_key: V,
-    ) -> Self {
-        Self {
-            key_id: key_id.as_ref().to_owned(),
-            service_id: service_id.as_ref().to_owned(),
-            team_id: team_id.as_ref().to_owned(),
-            private_key: private_key.as_ref().to_owned(),
-        }
-    }
-}
-
 #[derive(Serialize, Debug)]
 struct Header {
     /// Always "JWT"
@@ -61,6 +45,22 @@ struct Token {
     claims: Claims,
 }
 
+impl TokenAssets {
+    pub fn new<S: AsRef<str>, V: AsRef<[u8]>>(
+        key_id: S,
+        service_id: S,
+        team_id: S,
+        private_key: V,
+    ) -> Self {
+        Self {
+            key_id: key_id.as_ref().to_owned(),
+            service_id: service_id.as_ref().to_owned(),
+            team_id: team_id.as_ref().to_owned(),
+            private_key: private_key.as_ref().to_owned(),
+        }
+    }
+}
+
 impl Header {
     fn new<S: AsRef<str>>(kid: S, id: S) -> Self {
         Self {
@@ -72,6 +72,34 @@ impl Header {
     }
 }
 
+impl Claims {
+    fn from_token_assets(token_assets: &TokenAssets) -> Result<Self> {
+        Ok(Self {
+                iss: token_assets.team_id.clone(),
+                iat: SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)?
+                    .as_secs(),
+                exp: (SystemTime::now() + Duration::from_secs(ONE_HOUR))
+                    .duration_since(SystemTime::UNIX_EPOCH)?
+                    .as_secs(),
+                sub: token_assets.service_id.clone(),
+            }
+        )
+    }
+}
+
+impl Token {
+    fn from_token_assets(token_assets: &TokenAssets) -> Result<Self>{
+        Ok(Self {
+            header: Header::new(
+                &token_assets.key_id,
+                &format!("{}.{}", token_assets.team_id, token_assets.service_id),
+            ),
+            claims: Claims::from_token_assets(token_assets)?,
+        })
+    }
+}
+
 fn encode_as_b64<T: Serialize>(t: &T) -> Result<String> {
     let mut result = String::new();
     let json = serde_json::to_vec(t)?;
@@ -79,31 +107,8 @@ fn encode_as_b64<T: Serialize>(t: &T) -> Result<String> {
     Ok(result)
 }
 
-fn get_claims(token_assets: &TokenAssets) -> Result<Claims> {
-    Ok(Claims {
-        iss: token_assets.team_id.clone(),
-        iat: SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs(),
-        exp: (SystemTime::now() + Duration::from_secs(ONE_HOUR))
-            .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs(),
-        sub: token_assets.service_id.clone(),
-    })
-}
-
-fn get_token(token_assets: &TokenAssets) -> Result<Token> {
-    let header = Header::new(
-        &token_assets.key_id,
-        &format!("{}.{}", token_assets.team_id, token_assets.service_id),
-    );
-    let claims = get_claims(token_assets)?;
-
-    Ok(Token { header, claims })
-}
-
 pub fn generate_auth_token(token_assets: &TokenAssets) -> Result<String> {
-    let token = get_token(token_assets)?;
+    let token = Token::from_token_assets(token_assets)?;
 
     // Instead of using serde::Serialize on token, we serialize the header and claims
     // separately and just append the claims to the header; that way, we get two
